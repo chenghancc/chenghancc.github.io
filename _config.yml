@@ -2,11 +2,6 @@
 ## Docs: https://hexo.io/docs/configuration.html
 ## Source: https://github.com/hexojs/hexo/
 
-# deploy
-deploy:
-  type: git # Deployment type
-  repo: 'https://github.com/chenghancc/chenghancc.github.io.git' # Your repository name
-  branch: 'main' # Branch to deploy to  
 
 # Site
 title: Hexo
@@ -106,5 +101,8 @@ theme: butterfly
 
 # Deployment
 ## Docs: https://hexo.io/docs/one-command-deployment
+# deploy
 deploy:
-  type: ''
+  type: git # Deployment type
+  repo: 'https://github.com/chenghancc/chenghancc.github.io.git' # Your repository name
+  branch: 'main' # Branch to deploy to  
