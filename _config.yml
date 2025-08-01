@@ -4,17 +4,17 @@
 
 
 # Site
-title: Hexo
-subtitle: ''
-description: ''
+title: 似水流年
+subtitle: '珍惜每一段时光'
+description: '希望你的每一天都充满阳光'
 keywords:
-author: John Doe
-language: en
-timezone: ''
+author: Monarch
+language: zh-CN
+timezone: Asia/Shanghai
 
 # URL
 ## Set your site url here. For example, if you use GitHub Page, set url as 'https://username.github.io/project'
-url: http://example.com
+url: https://chenghancc.github.io
 permalink: :year/:month/:day/:title/
 permalink_defaults:
 pretty_urls:
