@@ -1,14 +1,14 @@
 # 关于我
 
-你好，我是这座小站的作者。  
-这里主要记录三类内容：
+你好，我是 **chenghancc**。
 
-- 技术实践：真实项目里的方法、踩坑和取舍。
-- 生活观察：阅读、旅行、习惯和成长。
-- 创作笔记：从灵感到落地的过程复盘。
+这个博客主要会写：
 
-如果你也在做长期项目，欢迎交流。
+- 技术学习与项目实战
+- 工具与效率方法
+- 一些日常记录
 
-- 邮箱：`you@example.com`
-- GitHub：`https://github.com`
-- X：`https://x.com`
+欢迎通过下面方式联系我：
+
+- GitHub：`https://github.com/chenghancc`
+- Email：`chenghancc@users.noreply.github.com`

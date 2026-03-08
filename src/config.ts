@@ -8,20 +8,20 @@ import type {
 import { LinkPreset } from "./types/config";
 
 export const siteConfig: SiteConfig = {
-	title: "山岚手记",
-	subtitle: "记录生活、技术和长期主义",
+	title: "chenghancc",
+	subtitle: "记录技术、创作与生活",
 	lang: "zh_CN", // Language code, e.g. 'en', 'zh_CN', 'ja', etc.
 	themeColor: {
-		hue: 24, // Default hue for the theme color, from 0 to 360. e.g. red: 0, teal: 200, cyan: 250, pink: 345
+		hue: 250, // Default hue for the theme color, from 0 to 360. e.g. red: 0, teal: 200, cyan: 250, pink: 345
 		fixed: false, // Hide the theme color picker for visitors
 	},
 	banner: {
-		enable: true,
-		src: "/images/banner.svg", // Relative to the /src directory. Relative to the /public directory if it starts with '/'
+		enable: false,
+		src: "assets/images/demo-banner.png", // Relative to the /src directory. Relative to the /public directory if it starts with '/'
 		position: "center", // Equivalent to object-position, only supports 'top', 'center', 'bottom'. 'center' by default
 		credit: {
-			enable: true, // Display the credit text of the banner image
-			text: "原创抽象背景",
+			enable: false, // Display the credit text of the banner image
+			text: "",
 			url: "",
 		},
 	},
@@ -45,34 +45,34 @@ export const navBarConfig: NavBarConfig = {
 		LinkPreset.Archive,
 		LinkPreset.About,
 		{
-			name: "模板仓库",
-			url: "https://github.com/saicaca/fuwari", // Internal links should not include the base path, as it is automatically added
+			name: "GitHub",
+			url: "https://github.com/chenghancc", // Internal links should not include the base path, as it is automatically added
 			external: true, // Show an external link icon and will open in a new tab
 		},
 	],
 };
 
 export const profileConfig: ProfileConfig = {
-	avatar: "/images/avatar.svg", // Relative to the /src directory. Relative to the /public directory if it starts with '/'
-	name: "你的名字",
-	bio: "把热爱写成文字，把经验沉淀为方法。",
+	avatar: "assets/images/demo-avatar.png", // Relative to the /src directory. Relative to the /public directory if it starts with '/'
+	name: "chenghancc",
+	bio: "你好，这里是 chenghancc 的个人博客。",
 	links: [
 		{
-			name: "X",
-			icon: "fa6-brands:x-twitter", // Visit https://icones.js.org/ for icon codes
+			name: "GitHub",
+			icon: "fa6-brands:github", // Visit https://icones.js.org/ for icon codes
 			// You will need to install the corresponding icon set if it's not already included
 			// `pnpm add @iconify-json/<icon-set-name>`
-			url: "https://x.com",
+			url: "https://github.com/chenghancc",
 		},
 		{
 			name: "Email",
 			icon: "fa6-regular:envelope",
-			url: "mailto:you@example.com",
+			url: "mailto:chenghancc@users.noreply.github.com",
 		},
 		{
-			name: "GitHub",
-			icon: "fa6-brands:github",
-			url: "https://github.com",
+			name: "X",
+			icon: "fa6-brands:x-twitter",
+			url: "https://x.com/chenghancc",
 		},
 	],
 };
