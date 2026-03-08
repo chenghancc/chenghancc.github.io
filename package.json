@@ -11,6 +11,13 @@
     "astro": "astro",
     "type-check": "tsc --noEmit --isolatedDeclarations",
     "new-post": "node scripts/new-post.js",
+    "blog:info": "bash scripts/blog.sh info",
+    "blog:status": "bash scripts/blog.sh status",
+    "blog:new": "bash scripts/blog.sh new",
+    "blog:dev": "bash scripts/blog.sh dev",
+    "blog:build": "bash scripts/blog.sh build",
+    "blog:publish": "bash scripts/blog.sh publish",
+    "blog:release": "bash scripts/blog.sh release",
     "format": "biome format --write ./src",
     "lint": "biome check --write ./src",
     "preinstall": "npx only-allow pnpm"
