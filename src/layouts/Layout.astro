@@ -567,74 +567,84 @@ if (window.swup) {
 </script>
 
 <script>
-const VISIT_SITE_SELECTOR = "[data-visit-site]";
-const VISIT_PAGE_SELECTOR = "[data-visit-page]";
-const VISIT_STATS_KEY = "__fuwari_visit_stats_state__";
-const SITE_TOTAL_STORAGE_KEY = "__fuwari_site_views_total__";
-const PAGE_TOTAL_STORAGE_PREFIX = "__fuwari_page_views__";
+const SITE_BADGE_SELECTOR = "[data-global-site-badge]";
+const PAGE_BADGE_SELECTOR = "[data-global-page-badge]";
+const HITS_STATE_KEY = "__fuwari_global_hits_state__";
 
-const getVisitState = () => {
-	if (!window[VISIT_STATS_KEY]) {
-		window[VISIT_STATS_KEY] = {
+const getHitsState = () => {
+	if (!window[HITS_STATE_KEY]) {
+		window[HITS_STATE_KEY] = {
 			lastPath: "",
 			hooked: false,
 		};
 	}
-	return window[VISIT_STATS_KEY];
+	return window[HITS_STATE_KEY];
 };
 
-const setVisitValue = (selector, value) => {
+const normalizeHost = () => {
+	const host = window.location.hostname || "localhost";
+	return host
+		.toLowerCase()
+		.replace(/[^a-z0-9.-]/g, "-")
+		.replace(/-+/g, "-")
+		.replace(/^-|-$/g, "");
+};
+
+const normalizePath = (path) =>
+	(path || "/")
+		.toLowerCase()
+		.replace(/\/+$/, "")
+		.replace(/[^a-z0-9/_-]/g, "-")
+		.replace(/-+/g, "-")
+		.replace(/\//g, "_")
+		.replace(/^_+|_+$/g, "") || "home";
+
+const buildHitsBadgeUrl = (key, label, tick) =>
+	`https://hits.sh/${key}.svg?style=flat-square&label=${encodeURIComponent(label)}&color=3b82f6&labelColor=374151&view=${tick}`;
+
+const setBadge = (selector, src, alt) => {
 	document.querySelectorAll(selector).forEach((node) => {
-		node.textContent = value;
+		if (!(node instanceof HTMLImageElement)) return;
+		if (node.dataset.hitsSrc === src) return;
+		node.dataset.hitsSrc = src;
+		node.src = src;
+		node.alt = alt;
 	});
 };
 
-const formatVisitCount = (value) => new Intl.NumberFormat("zh-CN").format(value);
-
-const readCount = (key) => {
-	const value = Number(window.localStorage.getItem(key) || "0");
-	return Number.isFinite(value) && value > 0 ? Math.floor(value) : 0;
-};
-
-const writeCount = (key, value) => {
-	window.localStorage.setItem(key, String(value));
-};
-
-const sanitizePath = (path) =>
-	path
-		.toLowerCase()
-		.replace(/[^a-z0-9/_-]/g, "-")
-		.replace(/-+/g, "-")
-		.replace(/^\/+|\/+$/g, "") || "home";
-
-const refreshVisitStats = async () => {
-	const state = getVisitState();
+const refreshGlobalHitsBadges = () => {
+	const state = getHitsState();
 	const currentPath = `${window.location.pathname}${window.location.search}`;
 	if (state.lastPath === currentPath) return;
 	state.lastPath = currentPath;
 
-	const siteTotal = readCount(SITE_TOTAL_STORAGE_KEY) + 1;
-	writeCount(SITE_TOTAL_STORAGE_KEY, siteTotal);
+	const host = normalizeHost() || "localhost";
+	const pageKey = normalizePath(window.location.pathname);
+	const tick = Date.now().toString(36);
 
-	const pageStorageKey = `${PAGE_TOTAL_STORAGE_PREFIX}:${sanitizePath(window.location.pathname)}`;
-	const pageTotal = readCount(pageStorageKey) + 1;
-	writeCount(pageStorageKey, pageTotal);
-
-	setVisitValue(VISIT_SITE_SELECTOR, formatVisitCount(siteTotal));
-	setVisitValue(VISIT_PAGE_SELECTOR, formatVisitCount(pageTotal));
+	setBadge(
+		SITE_BADGE_SELECTOR,
+		buildHitsBadgeUrl(`${host}__all`, "total", tick),
+		"Global total views",
+	);
+	setBadge(
+		PAGE_BADGE_SELECTOR,
+		buildHitsBadgeUrl(`${host}__${pageKey}`, "page", tick),
+		"Global current page views",
+	);
 };
 
-const bootstrapVisitStats = () => {
-	const state = getVisitState();
-	void refreshVisitStats();
+const bootstrapGlobalHits = () => {
+	const state = getHitsState();
+	refreshGlobalHitsBadges();
 	if (!window.swup?.hooks || state.hooked) return;
 	state.hooked = true;
-	window.swup.hooks.on("page:view", refreshVisitStats);
+	window.swup.hooks.on("page:view", refreshGlobalHitsBadges);
 };
 
 if (window.swup?.hooks) {
-	bootstrapVisitStats();
+	bootstrapGlobalHits();
 } else {
-	document.addEventListener("swup:enable", bootstrapVisitStats, { once: true });
+	document.addEventListener("swup:enable", bootstrapGlobalHits, { once: true });
 }
 </script>
