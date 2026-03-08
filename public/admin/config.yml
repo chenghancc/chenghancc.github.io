@@ -1,0 +1,57 @@
+backend:
+  name: github
+  repo: chenghancc/chenghancc.github.io
+  branch: main
+  # GitHub Pages 场景需要一个 OAuth 回调服务，见 docs/CMS_ADMIN.zh-CN.md
+  base_url: https://chenghancc-decap-oauth.1663813502.workers.dev
+  auth_endpoint: auth
+  site_domain: chenghancc.github.io
+
+# 本地开发时可配合 `pnpm cms:proxy` 使用，无需走 OAuth
+local_backend: true
+
+media_folder: public/uploads
+public_folder: /uploads
+
+publish_mode: simple
+
+slug:
+  encoding: ascii
+  clean_accents: true
+  sanitize_replacement: "-"
+
+collections:
+  - name: posts
+    label: 文章
+    label_singular: 文章
+    folder: src/content/posts
+    create: true
+    extension: md
+    format: frontmatter
+    slug: "{{year}}-{{month}}-{{day}}-{{slug}}"
+    summary: "{{title}} - {{published}}"
+    fields:
+      - { label: 标题, name: title, widget: string }
+      - { label: 发布时间, name: published, widget: datetime, date_format: "YYYY-MM-DD", time_format: false }
+      - { label: 更新时间, name: updated, widget: datetime, required: false, date_format: "YYYY-MM-DD", time_format: false }
+      - { label: 摘要, name: description, widget: text, required: false }
+      - { label: 封面图, name: image, widget: image, required: false, media_folder: "public/uploads/post-cover", public_folder: "/uploads/post-cover" }
+      - label: 标签
+        name: tags
+        widget: list
+        required: false
+        default: []
+        field: { label: 标签, name: tag, widget: string }
+      - { label: 分类, name: category, widget: string, required: false }
+      - { label: 语言, name: lang, widget: string, required: false, hint: "默认留空，跟随站点语言" }
+      - { label: 草稿, name: draft, widget: boolean, default: false, required: false }
+      - { label: 正文, name: body, widget: markdown }
+
+  - name: spec
+    label: 单页
+    files:
+      - label: 关于页
+        name: about
+        file: src/content/spec/about.md
+        fields:
+          - { label: 内容, name: body, widget: markdown }

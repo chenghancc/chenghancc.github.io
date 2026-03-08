@@ -53,3 +53,8 @@ pnpm blog:publish "chore: 文案微调"
 
 - Actions 页面：`https://github.com/chenghancc/chenghancc.github.io/actions`
 - 线上地址：`https://chenghancc.github.io/`
+
+## 七、在线后台写文章（GitHub Pages）
+
+- 后台入口：`https://chenghancc.github.io/admin/`
+- 首次接入步骤见：`docs/CMS_ADMIN.zh-CN.md`

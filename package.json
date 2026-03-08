@@ -18,6 +18,7 @@
     "blog:build": "bash scripts/blog.sh build",
     "blog:publish": "bash scripts/blog.sh publish",
     "blog:release": "bash scripts/blog.sh release",
+    "cms:proxy": "npx decap-server",
     "format": "biome format --write ./src",
     "lint": "biome check --write ./src",
     "preinstall": "npx only-allow pnpm"
