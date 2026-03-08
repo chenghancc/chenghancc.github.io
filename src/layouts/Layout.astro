@@ -565,3 +565,90 @@ if (window.swup) {
 	document.addEventListener("swup:enable", setup)
 }
 </script>
+
+<script>
+const VISIT_SITE_SELECTOR = "[data-visit-site]";
+const VISIT_PAGE_SELECTOR = "[data-visit-page]";
+
+const setVisitValue = (selector: string, value: string) => {
+	document.querySelectorAll<HTMLElement>(selector).forEach((node) => {
+		node.textContent = value;
+	});
+};
+
+const formatVisitCount = (value: number) =>
+	new Intl.NumberFormat("zh-CN").format(value);
+
+const buildVisitNamespace = () => {
+	const hostname = window.location.hostname || "localhost";
+	const normalized = hostname
+		.toLowerCase()
+		.replace(/[^a-z0-9.-]/g, "-")
+		.replace(/-+/g, "-")
+		.replace(/^-|-$/g, "");
+	return `fuwari-${normalized || "localhost"}`;
+};
+
+const buildPageKey = () => {
+	const pathname = window.location.pathname.replace(/\/+$/, "") || "/";
+	const normalized = pathname
+		.toLowerCase()
+		.replace(/[^a-z0-9/_-]/g, "-")
+		.replace(/-+/g, "-")
+		.replace(/\//g, "_")
+		.replace(/^_+|_+$/g, "");
+	return `page-${normalized || "home"}`.slice(0, 120);
+};
+
+const fetchVisitCount = async (namespace: string, key: string) => {
+	const api = `https://api.countapi.xyz/hit/${encodeURIComponent(namespace)}/${encodeURIComponent(key)}`;
+	const response = await fetch(api, { cache: "no-store" });
+	if (!response.ok) {
+		throw new Error(`visit api failed: ${response.status}`);
+	}
+	const data = await response.json();
+	if (!data || typeof data.value !== "number") {
+		throw new Error("visit api returned invalid payload");
+	}
+	return data.value;
+};
+
+let lastVisitedPath = "";
+const refreshVisitStats = async () => {
+	const currentPath = `${window.location.pathname}${window.location.search}`;
+	if (currentPath === lastVisitedPath) return;
+	lastVisitedPath = currentPath;
+
+	setVisitValue(VISIT_SITE_SELECTOR, "...");
+	setVisitValue(VISIT_PAGE_SELECTOR, "...");
+
+	const namespace = buildVisitNamespace();
+	try {
+		const [siteCount, pageCount] = await Promise.all([
+			fetchVisitCount(namespace, "site-total"),
+			fetchVisitCount(namespace, buildPageKey()),
+		]);
+		setVisitValue(VISIT_SITE_SELECTOR, formatVisitCount(siteCount));
+		setVisitValue(VISIT_PAGE_SELECTOR, formatVisitCount(pageCount));
+	} catch (error) {
+		console.warn("Failed to load visit statistics", error);
+		setVisitValue(VISIT_SITE_SELECTOR, "--");
+		setVisitValue(VISIT_PAGE_SELECTOR, "--");
+	}
+};
+
+refreshVisitStats();
+
+let visitStatsHooked = false;
+const setupVisitStats = () => {
+	if (!window.swup?.hooks || visitStatsHooked) return;
+	visitStatsHooked = true;
+	window.swup.hooks.on("page:view", refreshVisitStats);
+};
+
+if (window.swup?.hooks) {
+	setupVisitStats();
+} else {
+	document.addEventListener("swup:enable", setupVisitStats);
+}
+</script>
