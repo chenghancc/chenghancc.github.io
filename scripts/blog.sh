@@ -50,6 +50,9 @@ info)
 
 3) 博客文章
    src/content/posts/*.md
+
+详细教程：
+   docs/BLOG_GUIDE.zh-CN.md
 EOF
 	;;
 status)
