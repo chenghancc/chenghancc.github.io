@@ -59,7 +59,14 @@ backend:
 
 - 新建/编辑文章（`src/content/posts/*.md`）
 - 编辑关于页（`src/content/spec/about.md`）
+- 编辑全局站点配置（`src/site-settings.json`）
 - 上传图片到 `public/uploads/`
+
+### 后台可管理范围（当前）
+
+- 文章：标题、日期、标签、分类、封面图、正文
+- 单页：关于页
+- 站点配置：标题、副标题、语言、Banner、导航、头像与社交链接、版权、代码高亮主题
 
 ## 本地调试后台（可选）
 

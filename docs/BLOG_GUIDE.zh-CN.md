@@ -22,7 +22,7 @@ pnpm blog:release "feat: 更新内容"    # 构建 + 提交 + 推送
 ## 三、你要改哪里
 
 1. 站点标题、导航、头像、社交链接  
-`src/config.ts`
+`src/site-settings.json`（推荐）或 `src/config.ts`
 
 2. 关于页  
 `src/content/spec/about.md`

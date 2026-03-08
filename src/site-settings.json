@@ -1,0 +1,70 @@
+{
+  "siteConfig": {
+    "title": "chenghancc",
+    "subtitle": "记录技术、创作与生活",
+    "lang": "zh_CN",
+    "themeColor": {
+      "hue": 250,
+      "fixed": false
+    },
+    "banner": {
+      "enable": true,
+      "src": "assets/images/demo-banner.png",
+      "position": "center",
+      "credit": {
+        "enable": false,
+        "text": "",
+        "url": ""
+      }
+    },
+    "toc": {
+      "enable": true,
+      "depth": 2
+    },
+    "favicon": []
+  },
+  "navBar": {
+    "enablePresets": {
+      "home": true,
+      "archive": true,
+      "about": true
+    },
+    "links": [
+      {
+        "name": "GitHub",
+        "url": "https://github.com/chenghancc",
+        "external": true
+      }
+    ]
+  },
+  "profileConfig": {
+    "avatar": "https://github.com/chenghancc.png",
+    "name": "chenghancc",
+    "bio": "你好，这里是 chenghancc 的个人博客。",
+    "links": [
+      {
+        "name": "GitHub",
+        "icon": "fa6-brands:github",
+        "url": "https://github.com/chenghancc"
+      },
+      {
+        "name": "Email",
+        "icon": "fa6-regular:envelope",
+        "url": "mailto:chenghancc@users.noreply.github.com"
+      },
+      {
+        "name": "X",
+        "icon": "fa6-brands:x-twitter",
+        "url": "https://x.com/chenghancc"
+      }
+    ]
+  },
+  "licenseConfig": {
+    "enable": true,
+    "name": "CC BY-NC-SA 4.0",
+    "url": "https://creativecommons.org/licenses/by-nc-sa/4.0/"
+  },
+  "expressiveCodeConfig": {
+    "theme": "github-dark"
+  }
+}

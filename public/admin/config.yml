@@ -55,3 +55,103 @@ collections:
         file: src/content/spec/about.md
         fields:
           - { label: 内容, name: body, widget: markdown }
+
+  - name: settings
+    label: 站点设置
+    files:
+      - label: 全局配置
+        name: site_settings
+        file: src/site-settings.json
+        fields:
+          - label: 站点信息
+            name: siteConfig
+            widget: object
+            fields:
+              - { label: 站点标题, name: title, widget: string }
+              - { label: 站点副标题, name: subtitle, widget: string }
+              - label: 站点语言
+                name: lang
+                widget: select
+                options: [en, zh_CN, zh_TW, ja, ko, es, th, vi, tr, id]
+              - label: 主题色
+                name: themeColor
+                widget: object
+                fields:
+                  - { label: 色相(0-360), name: hue, widget: number, value_type: int, min: 0, max: 360, step: 1 }
+                  - { label: 固定主题色, name: fixed, widget: boolean, required: false }
+              - label: Banner
+                name: banner
+                widget: object
+                fields:
+                  - { label: 启用Banner, name: enable, widget: boolean, required: false }
+                  - { label: Banner图片, name: src, widget: image, required: false, media_folder: "public/uploads/site-banner", public_folder: "/uploads/site-banner" }
+                  - label: Banner位置
+                    name: position
+                    widget: select
+                    options: [top, center, bottom]
+                  - label: 图片来源信息
+                    name: credit
+                    widget: object
+                    fields:
+                      - { label: 显示来源, name: enable, widget: boolean, required: false }
+                      - { label: 来源文字, name: text, widget: string, required: false }
+                      - { label: 来源链接, name: url, widget: string, required: false }
+              - label: 目录(Toc)
+                name: toc
+                widget: object
+                fields:
+                  - { label: 启用目录, name: enable, widget: boolean, required: false }
+                  - label: 目录层级
+                    name: depth
+                    widget: select
+                    options: [1, 2, 3]
+
+          - label: 导航栏
+            name: navBar
+            widget: object
+            fields:
+              - label: 预设链接
+                name: enablePresets
+                widget: object
+                fields:
+                  - { label: 首页, name: home, widget: boolean, required: false }
+                  - { label: 归档, name: archive, widget: boolean, required: false }
+                  - { label: 关于, name: about, widget: boolean, required: false }
+              - label: 自定义链接
+                name: links
+                widget: list
+                required: false
+                fields:
+                  - { label: 名称, name: name, widget: string }
+                  - { label: 链接, name: url, widget: string }
+                  - { label: 外链(新窗口), name: external, widget: boolean, required: false }
+
+          - label: 个人资料
+            name: profileConfig
+            widget: object
+            fields:
+              - { label: 头像URL, name: avatar, widget: string, required: false }
+              - { label: 昵称, name: name, widget: string }
+              - { label: 简介, name: bio, widget: text, required: false }
+              - label: 社交链接
+                name: links
+                widget: list
+                required: false
+                fields:
+                  - { label: 平台名, name: name, widget: string }
+                  - { label: 图标代码(Iconify), name: icon, widget: string }
+                  - { label: 链接, name: url, widget: string }
+
+          - label: 版权配置
+            name: licenseConfig
+            widget: object
+            fields:
+              - { label: 启用版权声明, name: enable, widget: boolean, required: false }
+              - { label: 版权名称, name: name, widget: string }
+              - { label: 版权链接, name: url, widget: string }
+
+          - label: 代码高亮
+            name: expressiveCodeConfig
+            widget: object
+            fields:
+              - { label: 主题名, name: theme, widget: string }
