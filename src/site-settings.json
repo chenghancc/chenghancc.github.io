@@ -9,7 +9,7 @@
     },
     "banner": {
       "enable": true,
-      "src": "src/public/uploads/site-banner/jimeng-2026-03-08-4050-banner-banner-4k-bann....png",
+      "src": "assets/images/demo-banner.png",
       "position": "center",
       "credit": {
         "enable": false,
