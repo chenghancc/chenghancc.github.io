@@ -16,11 +16,11 @@
 
 ### 1. 部署 OAuth 回调服务
 
-推荐使用 Decap 文档中给出的 Cloudflare Worker 模板（`starcounter/decap-cf-oauth`）。
+推荐使用 `sterlingwes/decap-proxy` 作为 Cloudflare Worker OAuth 代理。
 
 官方说明：
 - https://decapcms.org/docs/github-backend/
-- https://github.com/starcounter/decap-cf-oauth
+- https://github.com/sterlingwes/decap-proxy
 
 按模板 README 完成部署后，你会得到一个 Worker 地址，例如：
 `https://decap-oauth.your-subdomain.workers.dev`
@@ -75,4 +75,3 @@ pnpm dev
 然后访问：
 
 - `http://localhost:4321/admin/`
-
