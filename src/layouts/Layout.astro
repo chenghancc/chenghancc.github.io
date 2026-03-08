@@ -570,6 +570,8 @@ if (window.swup) {
 const VISIT_SITE_SELECTOR = "[data-visit-site]";
 const VISIT_PAGE_SELECTOR = "[data-visit-page]";
 const VISIT_STATS_KEY = "__fuwari_visit_stats_state__";
+const SITE_TOTAL_STORAGE_KEY = "__fuwari_site_views_total__";
+const PAGE_TOTAL_STORAGE_PREFIX = "__fuwari_page_views__";
 
 const getVisitState = () => {
 	if (!window[VISIT_STATS_KEY]) {
@@ -589,47 +591,21 @@ const setVisitValue = (selector, value) => {
 
 const formatVisitCount = (value) => new Intl.NumberFormat("zh-CN").format(value);
 
-const fetchBusuanziStats = () =>
-	new Promise((resolve, reject) => {
-		const callbackName = `__busuanzi_callback_${Date.now()}_${Math.random().toString(36).slice(2)}`;
-		const script = document.createElement("script");
-		let timeoutId = null;
-		let settled = false;
+const readCount = (key) => {
+	const value = Number(window.localStorage.getItem(key) || "0");
+	return Number.isFinite(value) && value > 0 ? Math.floor(value) : 0;
+};
 
-		const cleanup = () => {
-			if (timeoutId !== null) window.clearTimeout(timeoutId);
-			if (script.parentNode) script.parentNode.removeChild(script);
-			try {
-				delete window[callbackName];
-			} catch {
-				window[callbackName] = undefined;
-			}
-		};
+const writeCount = (key, value) => {
+	window.localStorage.setItem(key, String(value));
+};
 
-		window[callbackName] = (data) => {
-			if (settled) return;
-			settled = true;
-			cleanup();
-			resolve(data || {});
-		};
-
-		script.async = true;
-		script.src = `https://busuanzi.ibruce.info/busuanzi?jsonpCallback=${callbackName}`;
-		script.referrerPolicy = "no-referrer-when-downgrade";
-		script.onerror = () => {
-			if (settled) return;
-			settled = true;
-			cleanup();
-			reject(new Error("failed to load busuanzi endpoint"));
-		};
-		timeoutId = window.setTimeout(() => {
-			if (settled) return;
-			settled = true;
-			cleanup();
-			reject(new Error("busuanzi request timeout"));
-		}, 8000);
-		document.head.appendChild(script);
-	});
+const sanitizePath = (path) =>
+	path
+		.toLowerCase()
+		.replace(/[^a-z0-9/_-]/g, "-")
+		.replace(/-+/g, "-")
+		.replace(/^\/+|\/+$/g, "") || "home";
 
 const refreshVisitStats = async () => {
 	const state = getVisitState();
@@ -637,31 +613,20 @@ const refreshVisitStats = async () => {
 	if (state.lastPath === currentPath) return;
 	state.lastPath = currentPath;
 
-	setVisitValue(VISIT_SITE_SELECTOR, "...");
-	setVisitValue(VISIT_PAGE_SELECTOR, "...");
+	const siteTotal = readCount(SITE_TOTAL_STORAGE_KEY) + 1;
+	writeCount(SITE_TOTAL_STORAGE_KEY, siteTotal);
 
-	try {
-		const stats = await fetchBusuanziStats();
-		const sitePv = Number(stats.site_pv);
-		const pagePv = Number(stats.page_pv);
-		setVisitValue(
-			VISIT_SITE_SELECTOR,
-			Number.isFinite(sitePv) ? formatVisitCount(sitePv) : "--",
-		);
-		setVisitValue(
-			VISIT_PAGE_SELECTOR,
-			Number.isFinite(pagePv) ? formatVisitCount(pagePv) : "--",
-		);
-	} catch (error) {
-		console.warn("Failed to load visit statistics", error);
-		setVisitValue(VISIT_SITE_SELECTOR, "--");
-		setVisitValue(VISIT_PAGE_SELECTOR, "--");
-	}
+	const pageStorageKey = `${PAGE_TOTAL_STORAGE_PREFIX}:${sanitizePath(window.location.pathname)}`;
+	const pageTotal = readCount(pageStorageKey) + 1;
+	writeCount(pageStorageKey, pageTotal);
+
+	setVisitValue(VISIT_SITE_SELECTOR, formatVisitCount(siteTotal));
+	setVisitValue(VISIT_PAGE_SELECTOR, formatVisitCount(pageTotal));
 };
 
 const bootstrapVisitStats = () => {
 	const state = getVisitState();
-	refreshVisitStats();
+	void refreshVisitStats();
 	if (!window.swup?.hooks || state.hooked) return;
 	state.hooked = true;
 	window.swup.hooks.on("page:view", refreshVisitStats);
