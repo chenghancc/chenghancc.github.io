@@ -5,7 +5,7 @@ backend:
   # GitHub Pages 场景需要一个 OAuth 回调服务，见 docs/CMS_ADMIN.zh-CN.md
   base_url: https://chenghancc-decap-oauth.1663813502.workers.dev
   auth_endpoint: auth
-  site_domain: chenghancc.github.io
+  site_domain: blog.124602.xyz
 
 # 本地开发时可配合 `pnpm cms:proxy` 使用，无需走 OAuth
 local_backend: true
