@@ -51,11 +51,6 @@
         "name": "Email",
         "icon": "fa6-regular:envelope",
         "url": "mailto:chenghancc@users.noreply.github.com"
-      },
-      {
-        "name": "X",
-        "icon": "fa6-brands:x-twitter",
-        "url": "https://x.com/chenghancc"
       }
     ]
   },
