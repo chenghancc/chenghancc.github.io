@@ -567,53 +567,109 @@ if (window.swup) {
 </script>
 
 <script>
-const BUSUANZI_SCRIPT_SRC = "https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js";
-const BUSUANZI_SITE_PV_ID = "busuanzi_value_site_pv";
-const BUSUANZI_PAGE_PV_ID = "busuanzi_value_page_pv";
+const VISIT_SITE_SELECTOR = "[data-visit-site]";
+const VISIT_PAGE_SELECTOR = "[data-visit-page]";
+const VISIT_STATS_KEY = "__fuwari_visit_stats_state__";
 
-const setVisitPlaceholder = (value) => {
-	[BUSUANZI_SITE_PV_ID, BUSUANZI_PAGE_PV_ID].forEach((id) => {
-		document.querySelectorAll(`#${id}`).forEach((el) => {
-			el.textContent = value;
-		});
-	});
-};
-
-const ensureBusuanziScript = () => {
-	const existing = document.querySelector('script[data-busuanzi="true"]');
-	if (existing) return;
-	const script = document.createElement("script");
-	script.async = true;
-	script.src = BUSUANZI_SCRIPT_SRC;
-	script.setAttribute("data-busuanzi", "true");
-	script.onerror = () => setVisitPlaceholder("--");
-	document.body.appendChild(script);
-};
-
-const refreshBusuanzi = () => {
-	if (window.Busuanzi && typeof window.Busuanzi.fetch === "function") {
-		window.Busuanzi.fetch();
-		return;
+const getVisitState = () => {
+	if (!window[VISIT_STATS_KEY]) {
+		window[VISIT_STATS_KEY] = {
+			lastPath: "",
+			hooked: false,
+		};
 	}
-	ensureBusuanziScript();
+	return window[VISIT_STATS_KEY];
 };
 
-setVisitPlaceholder("...");
-refreshBusuanzi();
-
-let busuanziHooked = false;
-const setupBusuanzi = () => {
-	if (!window.swup?.hooks || busuanziHooked) return;
-	busuanziHooked = true;
-	window.swup.hooks.on("page:view", () => {
-		setVisitPlaceholder("...");
-		setTimeout(refreshBusuanzi, 0);
+const setVisitValue = (selector, value) => {
+	document.querySelectorAll(selector).forEach((node) => {
+		node.textContent = value;
 	});
+};
+
+const formatVisitCount = (value) => new Intl.NumberFormat("zh-CN").format(value);
+
+const fetchBusuanziStats = () =>
+	new Promise((resolve, reject) => {
+		const callbackName = `__busuanzi_callback_${Date.now()}_${Math.random().toString(36).slice(2)}`;
+		const script = document.createElement("script");
+		let timeoutId = null;
+		let settled = false;
+
+		const cleanup = () => {
+			if (timeoutId !== null) window.clearTimeout(timeoutId);
+			if (script.parentNode) script.parentNode.removeChild(script);
+			try {
+				delete window[callbackName];
+			} catch {
+				window[callbackName] = undefined;
+			}
+		};
+
+		window[callbackName] = (data) => {
+			if (settled) return;
+			settled = true;
+			cleanup();
+			resolve(data || {});
+		};
+
+		script.async = true;
+		script.src = `https://busuanzi.ibruce.info/busuanzi?jsonpCallback=${callbackName}`;
+		script.referrerPolicy = "no-referrer-when-downgrade";
+		script.onerror = () => {
+			if (settled) return;
+			settled = true;
+			cleanup();
+			reject(new Error("failed to load busuanzi endpoint"));
+		};
+		timeoutId = window.setTimeout(() => {
+			if (settled) return;
+			settled = true;
+			cleanup();
+			reject(new Error("busuanzi request timeout"));
+		}, 8000);
+		document.head.appendChild(script);
+	});
+
+const refreshVisitStats = async () => {
+	const state = getVisitState();
+	const currentPath = `${window.location.pathname}${window.location.search}`;
+	if (state.lastPath === currentPath) return;
+	state.lastPath = currentPath;
+
+	setVisitValue(VISIT_SITE_SELECTOR, "...");
+	setVisitValue(VISIT_PAGE_SELECTOR, "...");
+
+	try {
+		const stats = await fetchBusuanziStats();
+		const sitePv = Number(stats.site_pv);
+		const pagePv = Number(stats.page_pv);
+		setVisitValue(
+			VISIT_SITE_SELECTOR,
+			Number.isFinite(sitePv) ? formatVisitCount(sitePv) : "--",
+		);
+		setVisitValue(
+			VISIT_PAGE_SELECTOR,
+			Number.isFinite(pagePv) ? formatVisitCount(pagePv) : "--",
+		);
+	} catch (error) {
+		console.warn("Failed to load visit statistics", error);
+		setVisitValue(VISIT_SITE_SELECTOR, "--");
+		setVisitValue(VISIT_PAGE_SELECTOR, "--");
+	}
+};
+
+const bootstrapVisitStats = () => {
+	const state = getVisitState();
+	refreshVisitStats();
+	if (!window.swup?.hooks || state.hooked) return;
+	state.hooked = true;
+	window.swup.hooks.on("page:view", refreshVisitStats);
 };
 
 if (window.swup?.hooks) {
-	setupBusuanzi();
+	bootstrapVisitStats();
 } else {
-	document.addEventListener("swup:enable", setupBusuanzi);
+	document.addEventListener("swup:enable", bootstrapVisitStats, { once: true });
 }
 </script>
