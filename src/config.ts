@@ -27,18 +27,34 @@ type SiteSettings = {
 
 const settings = siteSettings as SiteSettings;
 
+function normalizeCmsMediaPath(value?: string): string | undefined {
+	if (!value) return value;
+	if (value.startsWith("src/public/")) return `/${value.slice("src/public/".length)}`;
+	if (value.startsWith("public/")) return `/${value.slice("public/".length)}`;
+	return value;
+}
+
 const presetLinks: LinkPresetType[] = [];
 if (settings.navBar.enablePresets.home) presetLinks.push(LinkPreset.Home);
 if (settings.navBar.enablePresets.archive) presetLinks.push(LinkPreset.Archive);
 if (settings.navBar.enablePresets.about) presetLinks.push(LinkPreset.About);
 
-export const siteConfig: SiteConfig = settings.siteConfig;
+export const siteConfig: SiteConfig = {
+	...settings.siteConfig,
+	banner: {
+		...settings.siteConfig.banner,
+		src: normalizeCmsMediaPath(settings.siteConfig.banner.src) || "",
+	},
+};
 
 export const navBarConfig: NavBarConfig = {
 	links: [...presetLinks, ...settings.navBar.links],
 };
 
-export const profileConfig: ProfileConfig = settings.profileConfig;
+export const profileConfig: ProfileConfig = {
+	...settings.profileConfig,
+	avatar: normalizeCmsMediaPath(settings.profileConfig.avatar),
+};
 
 export const licenseConfig: LicenseConfig = settings.licenseConfig;
 

@@ -7,10 +7,15 @@ backend:
   auth_endpoint: /auth
   site_domain: blog.124602.xyz
 
+site_url: https://blog.124602.xyz
+display_url: https://blog.124602.xyz
+logo_url: /favicon/favicon-light-192.png
+
 # 本地开发时可配合 `pnpm cms:proxy` 使用，无需走 OAuth
 local_backend: true
 
-media_folder: public/uploads
+# 使用绝对路径写法，避免在 file collection 中被拼接到 src/ 下
+media_folder: /public/uploads
 public_folder: /uploads
 
 publish_mode: simple
@@ -30,12 +35,18 @@ collections:
     format: frontmatter
     slug: "{{year}}-{{month}}-{{day}}-{{slug}}"
     summary: "{{title}} - {{published}}"
+    sortable_fields: [published, updated, title, category]
+    view_filters:
+      - { label: 已发布, field: draft, pattern: false }
+      - { label: 草稿, field: draft, pattern: true }
+    view_groups:
+      - { label: 分类, field: category }
     fields:
       - { label: 标题, name: title, widget: string }
       - { label: 发布时间, name: published, widget: datetime, date_format: "YYYY-MM-DD", time_format: false }
       - { label: 更新时间, name: updated, widget: datetime, required: false, date_format: "YYYY-MM-DD", time_format: false }
       - { label: 摘要, name: description, widget: text, required: false }
-      - { label: 封面图, name: image, widget: image, required: false, media_folder: "public/uploads/post-cover", public_folder: "/uploads/post-cover" }
+      - { label: 封面图, name: image, widget: image, required: false, media_folder: "/public/uploads/post-cover", public_folder: "/uploads/post-cover", choose_url: false, allow_multiple: false }
       - label: 标签
         name: tags
         widget: list
@@ -84,7 +95,7 @@ collections:
                 widget: object
                 fields:
                   - { label: 启用Banner, name: enable, widget: boolean, required: false }
-                  - { label: Banner图片, name: src, widget: image, required: false, media_folder: "public/uploads/site-banner", public_folder: "/uploads/site-banner" }
+                  - { label: Banner图片, name: src, widget: image, required: false, media_folder: "/public/uploads/site-banner", public_folder: "/uploads/site-banner", choose_url: false, allow_multiple: false }
                   - label: Banner位置
                     name: position
                     widget: select
@@ -130,7 +141,7 @@ collections:
             name: profileConfig
             widget: object
             fields:
-              - { label: 头像URL, name: avatar, widget: string, required: false }
+              - { label: 头像图片, name: avatar, widget: image, required: false, media_folder: "/public/uploads/avatar", public_folder: "/uploads/avatar", choose_url: true, allow_multiple: false }
               - { label: 昵称, name: name, widget: string }
               - { label: 简介, name: bio, widget: text, required: false }
               - label: 社交链接

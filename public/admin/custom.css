@@ -1,0 +1,98 @@
+:root {
+	--cms-bg-1: #0b1020;
+	--cms-bg-2: #121a2f;
+	--cms-surface: rgba(255, 255, 255, 0.08);
+	--cms-surface-2: rgba(255, 255, 255, 0.12);
+	--cms-text: #e9edf7;
+	--cms-text-soft: #b6bfdb;
+	--cms-accent: #38bdf8;
+	--cms-accent-2: #22d3ee;
+	--cms-shadow: 0 20px 48px rgba(5, 10, 30, 0.45);
+}
+
+html,
+body {
+	min-height: 100%;
+}
+
+body.cms-modern {
+	margin: 0;
+	font-family: "Outfit", "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+	color: var(--cms-text);
+	background:
+		radial-gradient(60rem 35rem at 10% -20%, #1d4ed8 0%, transparent 60%),
+		radial-gradient(56rem 38rem at 110% -10%, #0ea5e9 0%, transparent 58%),
+		linear-gradient(160deg, var(--cms-bg-1), var(--cms-bg-2) 46%, #0d1426 100%);
+	background-attachment: fixed;
+}
+
+body.cms-modern #nc-root,
+body.cms-modern #nc-root > div {
+	background: transparent;
+}
+
+body.cms-modern a {
+	color: #7dd3fc;
+}
+
+/* Works for both legacy and newer Decap class naming */
+body.cms-modern [class*="AppHeader"],
+body.cms-modern [class*="appHeader"],
+body.cms-modern .nc-appHeader-appHeader {
+	backdrop-filter: blur(14px);
+	background: linear-gradient(
+		90deg,
+		rgba(10, 16, 34, 0.82),
+		rgba(20, 34, 67, 0.8)
+	) !important;
+	border-bottom: 1px solid rgba(255, 255, 255, 0.18) !important;
+	box-shadow: var(--cms-shadow);
+}
+
+body.cms-modern [class*="Sidebar"],
+body.cms-modern [class*="sidebar"],
+body.cms-modern .nc-collectionPage-sidebar {
+	background: rgba(8, 14, 30, 0.6) !important;
+	backdrop-filter: blur(10px);
+	border-right: 1px solid rgba(255, 255, 255, 0.12) !important;
+}
+
+body.cms-modern [class*="Card"],
+body.cms-modern [class*="card"],
+body.cms-modern .nc-entryEditor-editorContainer,
+body.cms-modern .nc-collectionPage-card {
+	background: var(--cms-surface) !important;
+	border: 1px solid rgba(255, 255, 255, 0.14) !important;
+	border-radius: 14px !important;
+	box-shadow: var(--cms-shadow);
+}
+
+body.cms-modern input,
+body.cms-modern textarea,
+body.cms-modern select {
+	background: rgba(7, 13, 28, 0.8) !important;
+	color: var(--cms-text) !important;
+	border: 1px solid rgba(255, 255, 255, 0.2) !important;
+	border-radius: 10px !important;
+}
+
+body.cms-modern button,
+body.cms-modern [role="button"] {
+	border-radius: 10px !important;
+}
+
+body.cms-modern [class*="primary"],
+body.cms-modern [class*="Primary"] {
+	background: linear-gradient(
+		120deg,
+		var(--cms-accent) 0%,
+		var(--cms-accent-2) 100%
+	) !important;
+	color: #001427 !important;
+}
+
+body.cms-modern [class*="Desc"],
+body.cms-modern [class*="description"],
+body.cms-modern [class*="hint"] {
+	color: var(--cms-text-soft) !important;
+}
