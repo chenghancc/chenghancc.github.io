@@ -1,0 +1,32 @@
+<svg width="1600" height="640" viewBox="0 0 1600 640" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="banner">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#FFF2E2"/>
+      <stop offset="55%" stop-color="#F8D8BC"/>
+      <stop offset="100%" stop-color="#E7B18A"/>
+    </linearGradient>
+    <radialGradient id="glow1" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(250 120) rotate(25) scale(520 280)">
+      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.75"/>
+      <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="glow2" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(1320 520) rotate(-15) scale(500 260)">
+      <stop offset="0%" stop-color="#F59E0B" stop-opacity="0.35"/>
+      <stop offset="100%" stop-color="#F59E0B" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="wave" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#A45A2A" stop-opacity="0.14"/>
+      <stop offset="100%" stop-color="#7C3A16" stop-opacity="0.08"/>
+    </linearGradient>
+  </defs>
+  <rect width="1600" height="640" fill="url(#bg)"/>
+  <ellipse cx="250" cy="120" rx="520" ry="280" fill="url(#glow1)"/>
+  <ellipse cx="1320" cy="520" rx="500" ry="260" fill="url(#glow2)"/>
+  <path d="M0 420C178 360 314 360 458 406C617 456 760 466 912 428C1066 390 1220 348 1370 374C1461 390 1538 426 1600 456V640H0V420Z" fill="url(#wave)"/>
+  <path d="M0 460C166 432 330 442 484 478C640 514 796 522 950 494C1122 462 1284 420 1450 442C1507 450 1558 466 1600 486V640H0V460Z" fill="#8B4513" fill-opacity="0.08"/>
+  <g opacity="0.52" stroke="#7C3A16" stroke-linecap="round">
+    <path d="M180 294L310 262" stroke-width="6"/>
+    <path d="M1290 206L1418 238" stroke-width="6"/>
+    <path d="M1208 188L1300 116" stroke-width="5"/>
+    <path d="M286 188L356 128" stroke-width="5"/>
+  </g>
+</svg>
