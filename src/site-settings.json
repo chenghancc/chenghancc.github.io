@@ -12,8 +12,8 @@
       "src": "/uploads/site-banner/jimeng-2026-03-08-4050-banner-banner-4k-bann....png",
       "position": "center",
       "credit": {
-        "enable": false,
-        "text": "",
+        "enable": true,
+        "text": "即梦AI生成",
         "url": ""
       }
     },
@@ -40,7 +40,7 @@
   "profileConfig": {
     "avatar": "https://github.com/chenghancc.png",
     "name": "chenghancc",
-    "bio": "你好，这里是 chenghancc 的个人博客。",
+    "bio": "这个一个完全依赖AI创建的博客",
     "links": [
       {
         "name": "GitHub",
