@@ -1,4 +1,4 @@
-# 在线后台写作（GitHub Pages）
+# 在线后台写作（GitHub Pages + Sveltia CMS）
 
 目标：在保留 `GitHub Pages` 部署的前提下，通过网页后台在线写文章。
 
@@ -12,7 +12,7 @@
 
 ## 一次性配置（必须）
 
-`GitHub Pages` 是纯静态托管，Decap CMS 登录 GitHub 需要一个 OAuth 回调服务。
+`GitHub Pages` 是纯静态托管，Sveltia CMS 登录 GitHub 需要一个 OAuth 回调服务。
 
 ### 1. 部署 OAuth 回调服务
 
@@ -76,7 +76,7 @@ backend:
 
 ## 本地调试后台（可选）
 
-本地可不走 OAuth，直接使用本地代理：
+本地可不走 OAuth，直接使用本地代理（兼容 Decap/Sveltia 配置）：
 
 ```bash
 cd /root/chenghancc.github.io
