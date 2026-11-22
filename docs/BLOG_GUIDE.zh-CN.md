@@ -1,60 +1,55 @@
-# 博客维护指南（长期可查）
+# 博客日常维护指南
 
-仓库目录：`/root/chenghancc.github.io`
+线上地址：`https://chenghancc.github.io/`  
+部署方式：推送代码到 `main` 分支，GitHub Actions 自动构建并发布到 GitHub Pages（约 1 分钟生效）。
 
-## 一、先进入仓库
+## 一、只需要维护这 4 个地方
 
-```bash
-cd /root/chenghancc.github.io
-```
+1. **个人信息 / 项目卡片 / 社交链接**  
+   编辑 `src/data/site.ts`
+2. **折腾记录（点亮首页热力图 & 最近动态）**  
+   编辑 `src/data/activity.ts`（做了新工具、跑通新模型、写了个小实验，随手加一行即可）
+3. **发布或修改文章**  
+   在 `src/content/posts/` 下新增或修改 `.md` 文件
+4. **关于我页面**  
+   编辑 `src/content/spec/about.md`
 
-## 二、最常用命令
+## 二、写一篇新文章
 
-```bash
-pnpm blog:info                       # 查看主要可修改文件
-pnpm blog:new my-new-post            # 新建文章
-pnpm blog:dev                        # 本地预览
-pnpm blog:build                      # 构建检查
-pnpm blog:publish "feat: 更新内容"    # 提交并推送
-pnpm blog:release "feat: 更新内容"    # 构建 + 提交 + 推送
-```
-
-## 三、你要改哪里
-
-1. 站点标题、导航、头像、社交链接  
-`src/site-settings.json`（推荐）或 `src/config.ts`
-
-2. 关于页  
-`src/content/spec/about.md`
-
-3. 博客文章  
-`src/content/posts/*.md`
-
-## 四、发布流程（推荐）
-
-改完文件后执行：
+### 方式 A：命令行新建
 
 ```bash
-cd /root/chenghancc.github.io
-pnpm blog:release "feat: 更新博客"
+pnpm new ai-agent-notes "AI Agent 实战记录"
 ```
 
-推送到 `main` 后，GitHub Actions 会自动部署到：  
-`https://chenghancc.github.io/`
+会在 `src/content/posts/ai-agent-notes.md` 生成带 Frontmatter 的模板：
 
-## 五、仅提交不构建
+```markdown
+---
+title: "AI Agent 实战记录"
+published: 2026-11-22
+description: "一句话摘要，会显示在首页卡片和搜索引擎结果中"
+category: "AI 工具"
+tags: [ai, agent]
+draft: false
+---
+
+正文内容...
+```
+
+### 方式 B：直接让 AI 帮你写并发布
+
+把你的想法、笔记或代码直接丢给 AI，说：
+> 「帮我在 `src/content/posts/` 写一篇文章，并运行 `pnpm blog:release` 发布到我的博客」
+
+## 三、本地预览与上线
 
 ```bash
-cd /root/chenghancc.github.io
-pnpm blog:publish "chore: 文案微调"
+pnpm dev                              # 本地实时预览：http://localhost:4321
+pnpm blog:release "feat: 发布新文章"    # 校验构建 + 自动 git push 上线
 ```
 
-## 六、查看部署状态
+## 四、查看部署状态
 
-- Actions 页面：`https://github.com/chenghancc/chenghancc.github.io/actions`
-- 线上地址：`https://chenghancc.github.io/`
-
-## 七、在线后台写文章（GitHub Pages）
-
-- 后台入口：`https://chenghancc.github.io/admin/`
-- 首次接入步骤见：`docs/CMS_ADMIN.zh-CN.md`
+- GitHub Actions：`https://github.com/chenghancc/chenghancc.github.io/actions`
+- 线上页面：`https://chenghancc.github.io/`

@@ -1,0 +1,270 @@
+---
+import { SITE } from "@data/site";
+---
+
+<div
+	id="cmd-palette"
+	class="fixed inset-0 z-50 hidden items-start justify-center bg-black/55 px-4 pt-[12vh] backdrop-blur-sm"
+	role="dialog"
+	aria-modal="true"
+	aria-label="命令面板与全站搜索"
+>
+	<div
+		id="cmd-dialog"
+		class="w-full max-w-xl overflow-hidden rounded-2xl border border-[var(--border-strong)] bg-[var(--bg-elevated)] shadow-2xl"
+	>
+		<div class="flex items-center gap-3 border-b border-[var(--border)] px-4 py-3">
+			<svg class="h-4 w-4 shrink-0 text-[var(--fg-muted)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+				<circle cx="11" cy="11" r="8" />
+				<path d="m21 21-4.3-4.3" />
+			</svg>
+			<input
+				id="cmd-input"
+				type="text"
+				placeholder="搜索文章、标签、项目，或输入命令..."
+				autocomplete="off"
+				class="w-full bg-transparent text-sm text-[var(--fg)] placeholder:text-[var(--fg-muted)] focus:outline-none"
+			/>
+			<kbd class="rounded border border-[var(--border)] bg-[var(--bg-subtle)] px-1.5 py-0.5 font-mono text-[10px] text-[var(--fg-muted)]">
+				ESC
+			</kbd>
+		</div>
+
+		<div id="cmd-results" class="max-h-[56vh] overflow-y-auto p-2"></div>
+
+		<div class="flex items-center justify-between border-t border-[var(--border)] px-4 py-2 font-mono text-[11px] text-[var(--fg-muted)]">
+			<div class="flex items-center gap-3">
+				<span>↑↓ 选择</span>
+				<span>↵ 打开</span>
+				<span>ESC 关闭</span>
+			</div>
+			<span id="cmd-status">⌘K</span>
+		</div>
+	</div>
+</div>
+
+<script is:inline define:vars={{ siteEmail: SITE.email, siteGithub: SITE.github }}>
+	(() => {
+		const modal = document.getElementById("cmd-palette");
+		const input = document.getElementById("cmd-input");
+		const resultsEl = document.getElementById("cmd-results");
+		const openBtn = document.getElementById("cmd-open-btn");
+		const statusEl = document.getElementById("cmd-status");
+
+		let indexData = null;
+		let activeItems = [];
+		let selectedIdx = 0;
+
+		const QUICK_ACTIONS = [
+			{ type: "导航", title: "首页", subtitle: "返回个人主页", url: "/" },
+			{ type: "导航", title: "全部文章", subtitle: "按时间与标签浏览所有文章", url: "/posts/" },
+			{ type: "导航", title: "项目作品", subtitle: "查看 AI 实验与开源项目", url: "/projects/" },
+			{ type: "导航", title: "关于我", subtitle: "个人介绍与联系方式", url: "/about/" },
+			{ type: "命令", title: "切换深色 / 浅色模式", subtitle: "立即切换页面主题", action: "toggle-theme" },
+			{ type: "命令", title: "复制联系邮箱", subtitle: siteEmail, action: "copy-email" },
+			{ type: "链接", title: "打开 GitHub 主页", subtitle: siteGithub, url: siteGithub, external: true },
+			{ type: "链接", title: "RSS 订阅源", subtitle: "/rss.xml", url: "/rss.xml" },
+		];
+
+		async function loadIndex() {
+			if (indexData) return indexData;
+			try {
+				const res = await fetch("/search.json");
+				indexData = await res.json();
+			} catch {
+				indexData = { posts: [], projects: [] };
+			}
+			return indexData;
+		}
+
+		function escapeHtml(str) {
+			return String(str ?? "")
+				.replace(/&/g, "&amp;")
+				.replace(/</g, "&lt;")
+				.replace(/>/g, "&gt;")
+				.replace(/"/g, "&quot;");
+		}
+
+		function buildItems(query) {
+			const q = query.trim().toLowerCase();
+			const posts = (indexData?.posts ?? []).map((p) => ({
+				type: "文章",
+				title: p.title,
+				subtitle: `${p.date}${p.category ? ` · ${p.category}` : ""}${p.description ? ` — ${p.description}` : ""}`,
+				searchText: `${p.title} ${p.description} ${p.category} ${(p.tags || []).join(" ")} ${p.excerpt || ""}`.toLowerCase(),
+				url: p.url,
+			}));
+
+			const projects = (indexData?.projects ?? []).map((p) => ({
+				type: "项目",
+				title: p.name,
+				subtitle: `${p.status} · ${p.tagline}`,
+				searchText: `${p.name} ${p.tagline} ${p.description} ${(p.tags || []).join(" ")}`.toLowerCase(),
+				url: p.url,
+				external: p.url.startsWith("http"),
+			}));
+
+			const actions = QUICK_ACTIONS.map((a) => ({
+				...a,
+				searchText: `${a.type} ${a.title} ${a.subtitle}`.toLowerCase(),
+			}));
+
+			if (!q) {
+				return [...posts.slice(0, 5), ...projects.slice(0, 3), ...actions.slice(0, 6)];
+			}
+
+			return [...posts, ...projects, ...actions].filter((item) =>
+				item.searchText.includes(q),
+			);
+		}
+
+		function render() {
+			if (!resultsEl) return;
+			if (activeItems.length === 0) {
+				resultsEl.innerHTML = `<div class="px-4 py-10 text-center text-sm text-[var(--fg-muted)]">未找到匹配结果，试试换个关键词</div>`;
+				return;
+			}
+
+			resultsEl.innerHTML = activeItems
+				.map((item, idx) => {
+					const isSelected = idx === selectedIdx;
+					return `
+						<button
+							type="button"
+							data-idx="${idx}"
+							class="cmd-item flex w-full items-center justify-between gap-3 rounded-xl px-3 py-2.5 text-left transition-colors ${
+								isSelected
+									? "bg-[var(--bg-subtle)] text-[var(--fg)]"
+									: "text-[var(--fg-secondary)] hover:bg-[var(--bg-subtle)]/60"
+							}"
+						>
+							<div class="min-w-0 flex-1">
+								<div class="truncate text-sm font-medium ${isSelected ? "text-[var(--fg)]" : ""}">${escapeHtml(item.title)}</div>
+								<div class="truncate text-xs text-[var(--fg-muted)]">${escapeHtml(item.subtitle)}</div>
+							</div>
+							<span class="shrink-0 rounded-md border border-[var(--border)] bg-[var(--bg)] px-2 py-0.5 font-mono text-[10px] text-[var(--fg-muted)]">
+								${escapeHtml(item.type)}
+							</span>
+						</button>
+					`;
+				})
+				.join("");
+
+			resultsEl.querySelectorAll(".cmd-item").forEach((btn) => {
+				btn.addEventListener("mouseenter", () => {
+					selectedIdx = Number(btn.getAttribute("data-idx") || 0);
+					updateSelectionVisual();
+				});
+				btn.addEventListener("click", () => {
+					const idx = Number(btn.getAttribute("data-idx") || 0);
+					executeItem(activeItems[idx]);
+				});
+			});
+		}
+
+		function updateSelectionVisual() {
+			if (!resultsEl) return;
+			resultsEl.querySelectorAll(".cmd-item").forEach((el, idx) => {
+				const isSelected = idx === selectedIdx;
+				el.classList.toggle("bg-[var(--bg-subtle)]", isSelected);
+				el.classList.toggle("text-[var(--fg)]", isSelected);
+				if (isSelected) {
+					el.scrollIntoView({ block: "nearest" });
+				}
+			});
+		}
+
+		function executeItem(item) {
+			if (!item) return;
+			if (item.action === "toggle-theme") {
+				window.__toggleTheme?.();
+				closeModal();
+				return;
+			}
+			if (item.action === "copy-email") {
+				navigator.clipboard?.writeText(siteEmail);
+				if (statusEl) {
+					statusEl.textContent = "已复制邮箱!";
+					setTimeout(() => {
+						statusEl.textContent = "⌘K";
+					}, 1600);
+				}
+				return;
+			}
+			if (item.url) {
+				closeModal();
+				if (item.external) {
+					window.open(item.url, "_blank", "noopener,noreferrer");
+				} else {
+					window.location.href = item.url;
+				}
+			}
+		}
+
+		async function openModal() {
+			if (!modal || !input) return;
+			modal.classList.remove("hidden");
+			modal.classList.add("flex");
+			document.body.style.overflow = "hidden";
+			input.value = "";
+			selectedIdx = 0;
+			await loadIndex();
+			activeItems = buildItems("");
+			render();
+			requestAnimationFrame(() => input.focus());
+		}
+
+		function closeModal() {
+			if (!modal) return;
+			modal.classList.add("hidden");
+			modal.classList.remove("flex");
+			document.body.style.overflow = "";
+		}
+
+		openBtn?.addEventListener("click", openModal);
+
+		modal?.addEventListener("click", (e) => {
+			if (e.target === modal) closeModal();
+		});
+
+		input?.addEventListener("input", () => {
+			selectedIdx = 0;
+			activeItems = buildItems(input.value);
+			render();
+		});
+
+		document.addEventListener("keydown", (e) => {
+			if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
+				e.preventDefault();
+				if (modal?.classList.contains("hidden")) {
+					openModal();
+				} else {
+					closeModal();
+				}
+				return;
+			}
+
+			if (modal?.classList.contains("hidden")) return;
+
+			if (e.key === "Escape") {
+				e.preventDefault();
+				closeModal();
+			} else if (e.key === "ArrowDown") {
+				e.preventDefault();
+				if (activeItems.length > 0) {
+					selectedIdx = (selectedIdx + 1) % activeItems.length;
+					updateSelectionVisual();
+				}
+			} else if (e.key === "ArrowUp") {
+				e.preventDefault();
+				if (activeItems.length > 0) {
+					selectedIdx = (selectedIdx - 1 + activeItems.length) % activeItems.length;
+					updateSelectionVisual();
+				}
+			} else if (e.key === "Enter") {
+				e.preventDefault();
+				executeItem(activeItems[selectedIdx]);
+			}
+		});
+	})();
+</script>

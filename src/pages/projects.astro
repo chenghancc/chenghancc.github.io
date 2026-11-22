@@ -1,0 +1,23 @@
+---
+import ProjectCard from "@components/ProjectCard.astro";
+import { PROJECTS } from "@data/site";
+import BaseLayout from "@layouts/BaseLayout.astro";
+---
+
+<BaseLayout title="项目" description="chenghancc 的 AI 实验、工具与开源项目合集。">
+	<section class="pb-10">
+		<p class="font-mono text-xs uppercase tracking-wider text-[var(--accent)]">Projects</p>
+		<h1 class="mt-2 text-3xl font-bold tracking-tight text-[var(--fg)] sm:text-4xl">
+			项目与 AI 实验
+		</h1>
+		<p class="mt-3 max-w-2xl text-sm leading-relaxed text-[var(--fg-secondary)]">
+			这里汇集我搭建的个人工具、开源仓库与 AI 工作流实践。所有卡片均由 <code class="rounded border border-[var(--border)] bg-[var(--bg-subtle)] px-1.5 py-0.5 font-mono text-xs text-[var(--fg)]">src/data/site.ts</code> 驱动，随时增删更新。
+		</p>
+	</section>
+
+	<section class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+		{PROJECTS.map((project) => (
+			<ProjectCard project={project} />
+		))}
+	</section>
+</BaseLayout>

@@ -1,0 +1,67 @@
+---
+import type { ProjectItem } from "@data/site";
+
+interface Props {
+	project: ProjectItem;
+}
+
+const { project } = Astro.props;
+const isExternal = project.url.startsWith("http");
+
+const statusStyles: Record<ProjectItem["status"], string> = {
+	Live: "border-emerald-500/30 bg-emerald-500/10 text-emerald-500 dark:text-emerald-400",
+	"Open Source":
+		"border-sky-500/30 bg-sky-500/10 text-sky-600 dark:text-sky-400",
+	Building:
+		"border-amber-500/30 bg-amber-500/10 text-amber-600 dark:text-amber-400",
+};
+---
+
+<a
+	href={project.url}
+	target={isExternal ? "_blank" : undefined}
+	rel={isExternal ? "noopener noreferrer" : undefined}
+	class="surface-card group flex flex-col justify-between rounded-2xl p-5"
+>
+	<div>
+		<div class="flex items-start justify-between gap-3">
+			<span
+				class:list={[
+					"inline-flex items-center rounded-full border px-2.5 py-0.5 font-mono text-[11px] font-medium",
+					statusStyles[project.status],
+				]}
+			>
+				{project.status}
+			</span>
+			<svg
+				class="h-4 w-4 text-[var(--fg-muted)] transition-transform duration-200 group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-[var(--fg)]"
+				viewBox="0 0 24 24"
+				fill="none"
+				stroke="currentColor"
+				stroke-width="2"
+				stroke-linecap="round"
+				stroke-linejoin="round"
+				aria-hidden="true"
+			>
+				<path d="M7 17 17 7" />
+				<path d="M7 7h10v10" />
+			</svg>
+		</div>
+
+		<h3 class="mt-4 text-base font-semibold tracking-tight text-[var(--fg)] group-hover:text-[var(--accent)] transition-colors">
+			{project.name}
+		</h3>
+		<p class="mt-1 text-xs font-medium text-[var(--fg-muted)]">{project.tagline}</p>
+		<p class="mt-3 text-sm leading-relaxed text-[var(--fg-secondary)]">
+			{project.description}
+		</p>
+	</div>
+
+	<div class="mt-5 flex flex-wrap gap-1.5">
+		{project.tags.map((tag) => (
+			<span class="rounded-md border border-[var(--border)] bg-[var(--bg-subtle)] px-2 py-0.5 font-mono text-[11px] text-[var(--fg-secondary)]">
+				{tag}
+			</span>
+		))}
+	</div>
+</a>

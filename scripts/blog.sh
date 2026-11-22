@@ -6,25 +6,16 @@ cd "$ROOT_DIR"
 
 usage() {
 	cat <<'EOF'
-Blog workflow helper
+Blog workflow helper (chenghancc.github.io)
 
 Usage:
-  bash scripts/blog.sh info
-  bash scripts/blog.sh status
-  bash scripts/blog.sh new <slug>
-  bash scripts/blog.sh dev
-  bash scripts/blog.sh build
-  bash scripts/blog.sh publish [commit_message]
-  bash scripts/blog.sh release [commit_message]
-
-Commands:
-  info     Show which files to edit for content/theme updates.
-  status   Show git status.
-  new      Create a new post file. Example: new my-first-post
-  dev      Start local dev server.
-  build    Build static site (same as CI).
-  publish  git add/commit/push to main.
-  release  build + publish in one command.
+  pnpm blog:info                        查看核心可编辑文件
+  pnpm blog:status                      查看当前 git 状态
+  pnpm blog:new <slug> [title]          新建一篇 Markdown 文章
+  pnpm blog:dev                         启动本地预览 (http://localhost:4321)
+  pnpm blog:build                       运行类型检查与生产构建
+  pnpm blog:publish [commit_message]    提交并推送到 main（触发 GitHub Pages 自动部署）
+  pnpm blog:release [commit_message]    构建校验 + 提交推送一条龙
 EOF
 }
 
@@ -41,32 +32,29 @@ shift || true
 case "$cmd" in
 info)
 	cat <<'EOF'
-可修改文件：
-1) 站点标题、头像、导航、社交链接
-   src/config.ts
+核心维护文件：
+1) 个人信息、首页文案、导航、项目卡片、社交链接：
+   src/data/site.ts
 
-2) 关于页内容
-   src/content/spec/about.md
-
-3) 博客文章
+2) 博客文章（Markdown）：
    src/content/posts/*.md
 
-详细教程：
-   docs/BLOG_GUIDE.zh-CN.md
+3) 关于页内容：
+   src/content/spec/about.md
+
+线上地址：
+   https://chenghancc.github.io/
 EOF
 	;;
 status)
 	git status -sb
 	;;
 new)
-	slug="${1:-}"
-	if [ -z "$slug" ]; then
-		echo "Error: missing slug. Example: bash scripts/blog.sh new my-first-post"
+	if [ $# -lt 1 ]; then
+		echo "Error: missing slug. Example: pnpm blog:new my-ai-note \"我的 AI 笔记\""
 		exit 1
 	fi
-	ensure_deps
-	pnpm new-post "$slug"
-	echo "Post created. Edit file in src/content/posts/"
+	node scripts/new-post.js "$@"
 	;;
 dev)
 	ensure_deps
@@ -74,6 +62,7 @@ dev)
 	;;
 build)
 	ensure_deps
+	pnpm check
 	pnpm build
 	;;
 publish)
@@ -85,11 +74,12 @@ publish)
 	fi
 	git commit -m "$msg"
 	git push origin main
-	echo "Published to main. GitHub Actions will deploy automatically."
+	echo "Published to main. GitHub Actions will deploy to https://chenghancc.github.io/"
 	;;
 release)
 	msg="${1:-chore: update blog content}"
 	ensure_deps
+	pnpm check
 	pnpm build
 	git add -A
 	if git diff --cached --quiet; then
@@ -98,7 +88,7 @@ release)
 	fi
 	git commit -m "$msg"
 	git push origin main
-	echo "Build + publish complete."
+	echo "Build + publish complete -> https://chenghancc.github.io/"
 	;;
 help | -h | --help)
 	usage

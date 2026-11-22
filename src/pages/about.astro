@@ -1,25 +1,59 @@
 ---
+import { getEntry } from "astro:content";
+import { SITE } from "@data/site";
+import BaseLayout from "@layouts/BaseLayout.astro";
 
-import { getEntry, render } from "astro:content";
-import Markdown from "@components/misc/Markdown.astro";
-import I18nKey from "../i18n/i18nKey";
-import { i18n } from "../i18n/translation";
-import MainGridLayout from "../layouts/MainGridLayout.astro";
-
-const aboutPost = await getEntry("spec", "about");
-
-if (!aboutPost) {
-	throw new Error("About page content not found");
-}
-
-const { Content } = await render(aboutPost);
+const aboutEntry = await getEntry("spec", "about");
+const rendered = aboutEntry ? await aboutEntry.render() : null;
+const AboutContent = rendered?.Content;
 ---
-<MainGridLayout title={i18n(I18nKey.about)} description={i18n(I18nKey.about)}>
-    <div class="flex w-full rounded-[var(--radius-large)] overflow-hidden relative min-h-32">
-        <div class="card-base z-10 px-9 py-6 relative w-full ">
-            <Markdown class="mt-2">
-                <Content />
-            </Markdown>
-        </div>
-    </div>
-</MainGridLayout>
+
+<BaseLayout title="关于" description={`关于 ${SITE.author}`}>
+	<section class="mx-auto max-w-3xl">
+		<p class="font-mono text-xs uppercase tracking-wider text-[var(--accent)]">About</p>
+		<h1 class="mt-2 text-3xl font-bold tracking-tight text-[var(--fg)] sm:text-4xl">
+			关于我
+		</h1>
+
+		<div class="surface-card mt-8 flex flex-col items-start gap-5 rounded-2xl p-6 sm:flex-row sm:items-center">
+			<img
+				src={SITE.avatar}
+				alt={SITE.author}
+				width="72"
+				height="72"
+				class="h-[72px] w-[72px] rounded-2xl border border-[var(--border)] object-cover"
+			/>
+			<div class="min-w-0 flex-1">
+				<div class="flex flex-wrap items-center gap-2">
+					<h2 class="text-lg font-semibold text-[var(--fg)]">{SITE.author}</h2>
+					<span class="rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2.5 py-0.5 font-mono text-[11px] text-emerald-500 dark:text-emerald-400">
+						AI-Native Builder
+					</span>
+				</div>
+				<p class="mt-1.5 text-sm leading-relaxed text-[var(--fg-secondary)]">
+					{SITE.heroBio}
+				</p>
+			</div>
+		</div>
+
+		<div class="article-prose mt-10">
+			{AboutContent ? <AboutContent /> : <p>内容建设中…</p>}
+		</div>
+
+		<div class="mt-12 grid gap-3 border-t border-[var(--border)] pt-8 sm:grid-cols-3">
+			{SITE.socials.map((item) => (
+				<a
+					href={item.url}
+					target={item.url.startsWith("http") ? "_blank" : undefined}
+					rel={item.url.startsWith("http") ? "noopener noreferrer" : undefined}
+					class="surface-card group rounded-xl p-4"
+				>
+					<div class="font-mono text-xs text-[var(--fg-muted)]">{item.name}</div>
+					<div class="mt-1 truncate text-sm font-medium text-[var(--fg)] transition-colors group-hover:text-[var(--accent)]">
+						{item.label}
+					</div>
+				</a>
+			))}
+		</div>
+	</section>
+</BaseLayout>

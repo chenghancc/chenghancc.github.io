@@ -1,0 +1,207 @@
+---
+import BaseLayout from "@layouts/BaseLayout.astro";
+import {
+	formatShortDate,
+	getAllCategories,
+	getAllTags,
+	getPublishedPosts,
+	groupPostsByYear,
+} from "@utils/posts";
+
+const posts = await getPublishedPosts();
+const grouped = groupPostsByYear(posts);
+const categories = getAllCategories(posts);
+const tags = getAllTags(posts);
+---
+
+<BaseLayout title="文章" description="按年份、分类与标签浏览全部技术文章与随笔。">
+	<section class="pb-8">
+		<p class="font-mono text-xs uppercase tracking-wider text-[var(--accent)]">Archive</p>
+		<h1 class="mt-2 text-3xl font-bold tracking-tight text-[var(--fg)] sm:text-4xl">
+			全部文章
+		</h1>
+		<p class="mt-3 text-sm text-[var(--fg-secondary)]">
+			共 <span class="font-mono text-[var(--fg)]">{posts.length}</span> 篇内容。支持按分类与标签即时筛选，或按 <kbd class="rounded border border-[var(--border)] bg-[var(--bg-subtle)] px-1.5 py-0.5 font-mono text-[11px]">⌘K</kbd> 全文搜索。
+		</p>
+	</section>
+
+	<!-- Filters -->
+	<section class="surface-card rounded-2xl p-4 sm:p-5">
+		<div class="flex flex-wrap items-center gap-2">
+			<span class="mr-1 font-mono text-xs text-[var(--fg-muted)]">分类:</span>
+			<button
+				type="button"
+				data-filter-type="all"
+				data-filter-value=""
+				data-active="true"
+				class="filter-pill rounded-lg border px-2.5 py-1 text-xs transition-colors"
+			>
+				全部 ({posts.length})
+			</button>
+			{categories.map((cat) => (
+				<button
+					type="button"
+					data-filter-type="category"
+					data-filter-value={cat.name}
+					data-active="false"
+					class="filter-pill rounded-lg border px-2.5 py-1 text-xs transition-colors"
+				>
+					{cat.name} ({cat.count})
+				</button>
+			))}
+		</div>
+
+		{tags.length > 0 && (
+			<div class="mt-3 flex flex-wrap items-center gap-1.5 border-t border-[var(--border)] pt-3">
+				<span class="mr-1 font-mono text-xs text-[var(--fg-muted)]">标签:</span>
+				{tags.map((tag) => (
+					<button
+						type="button"
+						data-filter-type="tag"
+						data-filter-value={tag.name}
+						data-active="false"
+						class="filter-pill rounded-md border px-2 py-0.5 font-mono text-[11px] transition-colors"
+					>
+						#{tag.name}
+					</button>
+				))}
+			</div>
+		)}
+	</section>
+
+	<!-- Yearly Timeline -->
+	<section id="archive-list" class="mt-10 space-y-10">
+		{grouped.map((group) => (
+			<div class="year-group" data-year={group.year}>
+				<div class="mb-4 flex items-center gap-3">
+					<h2 class="font-mono text-lg font-semibold text-[var(--fg)]">{group.year}</h2>
+					<div class="h-px flex-1 bg-[var(--border)]" />
+					<span class="year-count font-mono text-xs text-[var(--fg-muted)]">
+						{group.posts.length} 篇
+					</span>
+				</div>
+
+				<div class="divide-y divide-[var(--border)] rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)]">
+					{group.posts.map((post) => (
+						<a
+							href={`/posts/${post.slug}/`}
+							data-category={post.data.category ?? ""}
+							data-tags={(post.data.tags ?? []).join(",")}
+							class="post-item group flex flex-col gap-2 px-5 py-4 transition-colors hover:bg-[var(--bg-subtle)]/50 sm:flex-row sm:items-center sm:justify-between sm:gap-4"
+						>
+							<div class="min-w-0 flex-1">
+								<div class="flex items-center gap-3">
+									<time
+										datetime={post.data.published.toISOString()}
+										class="shrink-0 font-mono text-xs text-[var(--fg-muted)]"
+									>
+										{formatShortDate(post.data.published)}
+									</time>
+									<span class="truncate text-sm font-medium text-[var(--fg)] transition-colors group-hover:text-[var(--accent)] sm:text-base">
+										{post.data.title}
+									</span>
+								</div>
+								{post.data.description && (
+									<p class="mt-1 truncate pl-[3.25rem] text-xs text-[var(--fg-secondary)]">
+										{post.data.description}
+									</p>
+								)}
+							</div>
+
+							<div class="flex shrink-0 flex-wrap items-center gap-1.5 pl-[3.25rem] sm:pl-0">
+								{post.data.category && (
+									<span class="rounded-md border border-[var(--border)] bg-[var(--bg-subtle)] px-2 py-0.5 text-[11px] text-[var(--fg-secondary)]">
+										{post.data.category}
+									</span>
+								)}
+								{(post.data.tags ?? []).slice(0, 3).map((tag) => (
+									<span class="font-mono text-[11px] text-[var(--fg-muted)]">#{tag}</span>
+								))}
+							</div>
+						</a>
+					))}
+				</div>
+			</div>
+		))}
+	</section>
+
+	<div id="archive-empty" class="mt-12 hidden rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)] p-10 text-center text-sm text-[var(--fg-muted)]">
+		当前筛选条件下暂无文章。
+	</div>
+</BaseLayout>
+
+<script is:inline>
+	(() => {
+		const pills = Array.from(document.querySelectorAll(".filter-pill"));
+		const items = Array.from(document.querySelectorAll(".post-item"));
+		const groups = Array.from(document.querySelectorAll(".year-group"));
+		const emptyEl = document.getElementById("archive-empty");
+
+		function setActiveButton(activeBtn) {
+			for (const btn of pills) {
+				btn.setAttribute("data-active", String(btn === activeBtn));
+			}
+		}
+
+		function applyFilter(type, value) {
+			let totalVisible = 0;
+
+			for (const item of items) {
+				const cat = item.getAttribute("data-category") || "";
+				const tags = (item.getAttribute("data-tags") || "")
+					.split(",")
+					.filter(Boolean);
+
+				let visible = true;
+				if (type === "category" && value) {
+					visible = cat === value;
+				} else if (type === "tag" && value) {
+					visible = tags.includes(value);
+				}
+
+				item.classList.toggle("hidden", !visible);
+				if (visible) totalVisible += 1;
+			}
+
+			for (const group of groups) {
+				const visibleInGroup = group.querySelectorAll(".post-item:not(.hidden)").length;
+				group.classList.toggle("hidden", visibleInGroup === 0);
+				const countEl = group.querySelector(".year-count");
+				if (countEl) countEl.textContent = `${visibleInGroup} 篇`;
+			}
+
+			emptyEl?.classList.toggle("hidden", totalVisible > 0);
+		}
+
+		for (const btn of pills) {
+			btn.addEventListener("click", () => {
+				const type = btn.getAttribute("data-filter-type") || "all";
+				const value = btn.getAttribute("data-filter-value") || "";
+				setActiveButton(btn);
+				applyFilter(type, value);
+
+				const url = new URL(window.location.href);
+				url.searchParams.delete("category");
+				url.searchParams.delete("tag");
+				if (type === "category" && value) url.searchParams.set("category", value);
+				if (type === "tag" && value) url.searchParams.set("tag", value);
+				window.history.replaceState({}, "", url.toString());
+			});
+		}
+
+		const params = new URLSearchParams(window.location.search);
+		const initCat = params.get("category");
+		const initTag = params.get("tag");
+		if (initCat) {
+			const match = pills.find(
+				(b) => b.getAttribute("data-filter-type") === "category" && b.getAttribute("data-filter-value") === initCat,
+			);
+			if (match) match.click();
+		} else if (initTag) {
+			const match = pills.find(
+				(b) => b.getAttribute("data-filter-type") === "tag" && b.getAttribute("data-filter-value") === initTag,
+			);
+			if (match) match.click();
+		}
+	})();
+</script>

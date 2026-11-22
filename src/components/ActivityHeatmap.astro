@@ -1,0 +1,478 @@
+---
+import { ACTIVITY_LOG, type ActivityEntry } from "@data/activity";
+import { SITE } from "@data/site";
+import { fetchGitHubContributions } from "@utils/github";
+import { formatDate, getPublishedPosts } from "@utils/posts";
+
+const githubUsername = SITE.author;
+const snapshot = await fetchGitHubContributions(githubUsername);
+const posts = await getPublishedPosts();
+
+// Merge blog posts + manual building log into unified local events
+const localEvents: ActivityEntry[] = [
+	...ACTIVITY_LOG,
+	...posts.map((post) => ({
+		date: formatDate(post.data.published),
+		title: `发布文章《${post.data.title}》`,
+		kind: "post" as const,
+		summary: post.data.description || undefined,
+		url: `/posts/${post.slug}/`,
+	})),
+].sort((a, b) => b.date.localeCompare(a.date));
+
+const recentEvents = localEvents.slice(0, 3);
+
+const kindLabel: Record<ActivityEntry["kind"], string> = {
+	build: "BUILD",
+	ai: "AI",
+	post: "POST",
+	note: "NOTE",
+};
+
+const kindStyle: Record<ActivityEntry["kind"], string> = {
+	build:
+		"border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
+	ai: "border-sky-500/30 bg-sky-500/10 text-sky-600 dark:text-sky-400",
+	post: "border-indigo-500/30 bg-indigo-500/10 text-indigo-600 dark:text-indigo-400",
+	note: "border-amber-500/30 bg-amber-500/10 text-amber-600 dark:text-amber-400",
+};
+
+const payload = {
+	username: githubUsername,
+	github: snapshot.contributions,
+	localEvents,
+};
+---
+
+<section class="border-t border-[var(--border)] py-14" aria-label="创作与代码活动热力图">
+	<div class="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
+		<div>
+			<p class="font-mono text-xs uppercase tracking-wider text-[var(--accent)]">
+				Activity Heatmap
+			</p>
+			<h2 class="mt-1 text-xl font-semibold tracking-tight text-[var(--fg)] sm:text-2xl">
+				代码与折腾热力图
+			</h2>
+		</div>
+
+		<!-- Segmented mode tabs -->
+		<div
+			class="inline-flex w-fit items-center rounded-xl border border-[var(--border)] bg-[var(--bg-elevated)] p-1 font-mono text-xs"
+			role="tablist"
+			aria-label="热力图数据源切换"
+		>
+			<button
+				type="button"
+				role="tab"
+				aria-selected="true"
+				data-heatmap-mode="all"
+				data-active="true"
+				class="heatmap-tab rounded-lg px-3 py-1 transition-colors"
+			>
+				全部活动
+			</button>
+			<button
+				type="button"
+				role="tab"
+				aria-selected="false"
+				data-heatmap-mode="github"
+				data-active="false"
+				class="heatmap-tab rounded-lg px-3 py-1 transition-colors"
+			>
+				GitHub
+			</button>
+			<button
+				type="button"
+				role="tab"
+				aria-selected="false"
+				data-heatmap-mode="local"
+				data-active="false"
+				class="heatmap-tab rounded-lg px-3 py-1 transition-colors"
+			>
+				折腾记录
+			</button>
+		</div>
+	</div>
+
+	<div class="surface-card relative mt-6 rounded-2xl p-5 sm:p-6">
+		<!-- Stats Header -->
+		<div class="flex flex-wrap items-center justify-between gap-3 pb-4 text-xs">
+			<div class="flex flex-wrap items-center gap-x-4 gap-y-1.5 font-mono">
+				<span class="text-[var(--fg)]">
+					近一年 <strong id="hm-total" class="font-semibold text-emerald-500 dark:text-emerald-400">--</strong> 次活跃
+				</span>
+				<span class="text-[var(--fg-muted)]">·</span>
+				<span class="text-[var(--fg-secondary)]">
+					活跃天数 <strong id="hm-active-days" class="font-medium text-[var(--fg)]">--</strong> 天
+				</span>
+				<span class="text-[var(--fg-muted)]">·</span>
+				<span class="text-[var(--fg-secondary)]">
+					最长连续 <strong id="hm-streak" class="font-medium text-[var(--fg)]">--</strong> 天
+				</span>
+			</div>
+
+			<div class="flex items-center gap-1.5 font-mono text-[11px] text-[var(--fg-muted)]">
+				<span>Less</span>
+				<span class="hm-legend-cell" data-level="0" />
+				<span class="hm-legend-cell" data-level="1" />
+				<span class="hm-legend-cell" data-level="2" />
+				<span class="hm-legend-cell" data-level="3" />
+				<span class="hm-legend-cell" data-level="4" />
+				<span>More</span>
+			</div>
+		</div>
+
+		<!-- Heatmap Matrix (scrollable on very narrow screens) -->
+		<div class="overflow-x-auto pb-1">
+			<div class="inline-block min-w-full px-0.5">
+				<div id="hm-months" class="mb-1.5 ml-8 grid gap-[3px] font-mono text-[10px] text-[var(--fg-muted)]" />
+				<div class="flex gap-2">
+					<div class="grid w-6 shrink-0 grid-rows-7 gap-[3px] py-[1px] font-mono text-[10px] leading-[12px] text-[var(--fg-muted)]">
+						<span />
+						<span>Mon</span>
+						<span />
+						<span>Wed</span>
+						<span />
+						<span>Fri</span>
+						<span />
+					</div>
+					<div id="hm-grid" class="grid flex-1 gap-[3px] py-0.5" />
+				</div>
+			</div>
+		</div>
+
+		<!-- Floating Tooltip -->
+		<div
+			id="hm-tooltip"
+			class="pointer-events-none fixed z-50 hidden max-w-xs rounded-xl border border-[var(--border-strong)] bg-[var(--bg-elevated)] px-3 py-2 text-xs shadow-xl"
+			role="tooltip"
+		/>
+
+		<!-- Recent Activity Ticker -->
+		{recentEvents.length > 0 && (
+			<div class="mt-5 border-t border-[var(--border)] pt-4">
+				<div class="flex items-center justify-between gap-2 pb-2.5">
+					<span class="font-mono text-[11px] uppercase tracking-wider text-[var(--fg-muted)]">
+						Recent Milestones
+					</span>
+					<a
+						href={SITE.github}
+						target="_blank"
+						rel="noopener noreferrer"
+						class="font-mono text-[11px] text-[var(--fg-muted)] transition-colors hover:text-[var(--fg)]"
+					>
+						@{githubUsername} on GitHub ↗
+					</a>
+				</div>
+				<div class="grid gap-2 sm:grid-cols-3">
+					{recentEvents.map((ev) => (
+						<a
+							href={ev.url || "/posts/"}
+							class="group flex flex-col justify-between rounded-xl border border-[var(--border)] bg-[var(--bg-subtle)]/50 px-3.5 py-2.5 transition-colors hover:border-[var(--border-strong)] hover:bg-[var(--bg-subtle)]"
+						>
+							<div class="flex items-center justify-between gap-2">
+								<span
+									class:list={[
+										"rounded border px-1.5 py-0.5 font-mono text-[10px] font-medium",
+										kindStyle[ev.kind],
+									]}
+								>
+									{kindLabel[ev.kind]}
+								</span>
+								<time class="font-mono text-[11px] text-[var(--fg-muted)]">
+									{ev.date}
+								</time>
+							</div>
+							<p class="mt-1.5 line-clamp-1 text-xs font-medium text-[var(--fg)] transition-colors group-hover:text-[var(--accent)]">
+								{ev.title}
+							</p>
+						</a>
+					))}
+				</div>
+			</div>
+		)}
+	</div>
+</section>
+
+<script is:inline define:vars={{ initialPayload: payload }}>
+	(() => {
+		const gridEl = document.getElementById("hm-grid");
+		const monthsEl = document.getElementById("hm-months");
+		const tooltipEl = document.getElementById("hm-tooltip");
+		const totalEl = document.getElementById("hm-total");
+		const activeDaysEl = document.getElementById("hm-active-days");
+		const streakEl = document.getElementById("hm-streak");
+		const tabBtns = Array.from(document.querySelectorAll(".heatmap-tab"));
+
+		if (!gridEl || !monthsEl || !tooltipEl) return;
+
+		const MONTH_NAMES = [
+			"Jan",
+			"Feb",
+			"Mar",
+			"Apr",
+			"May",
+			"Jun",
+			"Jul",
+			"Aug",
+			"Sep",
+			"Oct",
+			"Nov",
+			"Dec",
+		];
+
+		let currentMode = "all";
+		let githubDays = Array.isArray(initialPayload.github)
+			? initialPayload.github
+			: [];
+		const localEvents = Array.isArray(initialPayload.localEvents)
+			? initialPayload.localEvents
+			: [];
+
+		// Map local events by YYYY-MM-DD
+		const localByDate = new Map();
+		for (const ev of localEvents) {
+			const list = localByDate.get(ev.date) || [];
+			list.push(ev);
+			localByDate.set(ev.date, list);
+		}
+
+		function escapeHtml(str) {
+			return String(str ?? "")
+				.replace(/&/g, "&amp;")
+				.replace(/</g, "&lt;")
+				.replace(/>/g, "&gt;")
+				.replace(/"/g, "&quot;");
+		}
+
+		function computeLevel(count, mode) {
+			if (count <= 0) return 0;
+			if (mode === "local") {
+				if (count === 1) return 2;
+				if (count === 2) return 3;
+				return 4;
+			}
+			if (count <= 2) return 1;
+			if (count <= 5) return 2;
+			if (count <= 10) return 3;
+			return 4;
+		}
+
+		function getMergedDays(mode) {
+			return githubDays.map((day) => {
+				const events = localByDate.get(day.date) || [];
+				const ghCount = day.count || 0;
+				const localCount = events.length;
+
+				let count = 0;
+				let level = 0;
+
+				if (mode === "github") {
+					count = ghCount;
+					level = day.level || computeLevel(count, "github");
+				} else if (mode === "local") {
+					count = localCount;
+					level = computeLevel(count, "local");
+				} else {
+					count = ghCount + localCount;
+					level = Math.max(
+						day.level || 0,
+						computeLevel(count, "all"),
+						localCount > 0 ? 2 : 0,
+					);
+				}
+
+				return {
+					date: day.date,
+					ghCount,
+					localCount,
+					count,
+					level: Math.min(4, level),
+					events,
+				};
+			});
+		}
+
+		function calcStats(days) {
+			let total = 0;
+			let activeDays = 0;
+			let maxStreak = 0;
+			let curStreak = 0;
+
+			for (const d of days) {
+				total += d.count;
+				if (d.count > 0) {
+					activeDays += 1;
+					curStreak += 1;
+					if (curStreak > maxStreak) maxStreak = curStreak;
+				} else {
+					curStreak = 0;
+				}
+			}
+
+			return { total, activeDays, maxStreak };
+		}
+
+		function renderHeatmap() {
+			const days = getMergedDays(currentMode);
+			if (days.length === 0) return;
+
+			const stats = calcStats(days);
+			if (totalEl) totalEl.textContent = String(stats.total);
+			if (activeDaysEl) activeDaysEl.textContent = String(stats.activeDays);
+			if (streakEl) streakEl.textContent = String(stats.maxStreak);
+
+			// Group into Sunday-start columns (weeks)
+			const firstDate = new Date(`${days[0].date}T00:00:00`);
+			const leadingEmpty = firstDate.getDay(); // 0=Sun..6=Sat
+			const cells = [...Array(leadingEmpty).fill(null), ...days];
+			const totalWeeks = Math.ceil(cells.length / 7);
+
+			gridEl.style.gridTemplateColumns = `repeat(${totalWeeks}, minmax(10px, 1fr))`;
+			gridEl.style.gridTemplateRows = "repeat(7, 12px)";
+			gridEl.style.gridAutoFlow = "column";
+
+			// Month labels aligned to week columns without truncation
+			monthsEl.style.gridTemplateColumns = `repeat(${totalWeeks}, minmax(10px, 1fr))`;
+			const monthLabels = new Array(totalWeeks).fill("");
+			let lastMonth = -1;
+			let lastLabeledWeek = -3;
+			for (let w = 0; w < totalWeeks; w++) {
+				const firstDayInWeek = cells
+					.slice(w * 7, w * 7 + 7)
+					.find((c) => c !== null);
+				if (!firstDayInWeek) continue;
+				const m = Number(firstDayInWeek.date.slice(5, 7)) - 1;
+				if (m !== lastMonth) {
+					if (w - lastLabeledWeek >= 3) {
+						monthLabels[w] = MONTH_NAMES[m] || "";
+						lastLabeledWeek = w;
+					}
+					lastMonth = m;
+				}
+			}
+			monthsEl.innerHTML = monthLabels
+				.map(
+					(label) =>
+						`<span class="overflow-visible whitespace-nowrap leading-none">${label}</span>`,
+				)
+				.join("");
+
+			gridEl.innerHTML = cells
+				.map((cell, idx) => {
+					if (!cell) {
+						return `<span class="block h-[12px] w-full rounded-[3px] opacity-0" aria-hidden="true"></span>`;
+					}
+					const hasLocal = cell.localCount > 0;
+					const clickable = hasLocal && cell.events[0]?.url;
+					return `<button
+						type="button"
+						data-cell-idx="${idx}"
+						data-level="${cell.level}"
+						data-has-local="${hasLocal ? "true" : "false"}"
+						aria-label="${cell.date}: ${cell.count} 次活跃"
+						class="hm-cell block h-[12px] w-full rounded-[3px] ${clickable ? "cursor-pointer" : "cursor-default"}"
+					></button>`;
+				})
+				.join("");
+
+			function showTooltip(btn, cell) {
+				const parts = [];
+				if (currentMode === "all") {
+					if (cell.ghCount > 0) parts.push(`GitHub ${cell.ghCount} 次贡献`);
+					if (cell.localCount > 0) parts.push(`站内 ${cell.localCount} 条记录`);
+					if (parts.length === 0) parts.push("暂无公开记录");
+				} else if (currentMode === "github") {
+					parts.push(
+						cell.ghCount > 0 ? `GitHub ${cell.ghCount} 次贡献` : "暂无提交",
+					);
+				} else {
+					parts.push(
+						cell.localCount > 0 ? `站内 ${cell.localCount} 条记录` : "暂无记录",
+					);
+				}
+
+				const eventsHtml =
+					currentMode !== "github" && cell.events.length > 0
+						? `<ul class="mt-1.5 space-y-1 border-t border-[var(--border)] pt-1.5 text-[11px] text-[var(--fg-secondary)]">
+							${cell.events
+								.map(
+									(e) =>
+										`<li class="truncate">• ${escapeHtml(e.title)}</li>`,
+								)
+								.join("")}
+						</ul>`
+						: "";
+
+				tooltipEl.innerHTML = `
+					<div class="font-mono text-[11px] font-semibold text-[var(--fg)]">${escapeHtml(cell.date)}</div>
+					<div class="mt-0.5 text-[11px] text-[var(--fg-secondary)]">${escapeHtml(parts.join(" · "))}</div>
+					${eventsHtml}
+				`;
+				tooltipEl.classList.remove("hidden");
+
+				const rect = btn.getBoundingClientRect();
+				const tipRect = tooltipEl.getBoundingClientRect();
+				let left = rect.left + rect.width / 2 - tipRect.width / 2;
+				left = Math.max(12, Math.min(left, window.innerWidth - tipRect.width - 12));
+				let top = rect.top - tipRect.height - 8;
+				if (top < 12) top = rect.bottom + 8;
+
+				tooltipEl.style.left = `${left}px`;
+				tooltipEl.style.top = `${top}px`;
+			}
+
+			function hideTooltip() {
+				tooltipEl.classList.add("hidden");
+			}
+
+			gridEl.querySelectorAll(".hm-cell").forEach((btn) => {
+				const idx = Number(btn.getAttribute("data-cell-idx"));
+				const cell = cells[idx];
+				if (!cell) return;
+
+				btn.addEventListener("mouseenter", () => showTooltip(btn, cell));
+				btn.addEventListener("focus", () => showTooltip(btn, cell));
+				btn.addEventListener("mouseleave", hideTooltip);
+				btn.addEventListener("blur", hideTooltip);
+
+				if (cell.localCount > 0 && cell.events[0]?.url) {
+					btn.addEventListener("click", () => {
+						window.location.href = cell.events[0].url;
+					});
+				}
+			});
+		}
+
+		for (const btn of tabBtns) {
+			btn.addEventListener("click", () => {
+				const mode = btn.getAttribute("data-heatmap-mode") || "all";
+				currentMode = mode;
+				for (const other of tabBtns) {
+					const active = other === btn;
+					other.setAttribute("data-active", String(active));
+					other.setAttribute("aria-selected", String(active));
+				}
+				renderHeatmap();
+			});
+		}
+
+		// Initial render with build-time snapshot
+		renderHeatmap();
+
+		// Silent live refresh from GitHub contributions API so new commits light up without rebuilding
+		fetch(
+			`https://github-contributions-api.jogruber.de/v4/${encodeURIComponent(initialPayload.username)}?y=last`,
+		)
+			.then((res) => (res.ok ? res.json() : null))
+			.then((data) => {
+				if (data && Array.isArray(data.contributions) && data.contributions.length > 0) {
+					githubDays = data.contributions;
+					renderHeatmap();
+				}
+			})
+			.catch(() => {
+				// Keep build-time snapshot gracefully
+			});
+	})();
+</script>
